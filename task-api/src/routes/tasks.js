@@ -3,6 +3,7 @@ const router = express.Router();
 const taskService = require('../services/taskService');
 const { validateCreateTask, validateUpdateTask, validateAssignTask, validatePagination } = require('../utils/validators');
 
+// NOTE: /stats must be registered before any /:id route or it would be treated as an id.
 router.get('/stats', (req, res) => {
   const stats = taskService.getStats();
   res.json(stats);
@@ -65,6 +66,7 @@ router.patch('/:id/complete', (req, res) => {
   res.json(task);
 });
 
+// Validation runs before the lookup, so a bad body returns 400 even for an unknown id.
 router.patch('/:id/assign', (req, res) => {
   const error = validateAssignTask(req.body);
   if (error) {

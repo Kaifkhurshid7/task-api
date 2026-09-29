@@ -1,13 +1,17 @@
 const { v4: uuidv4 } = require('uuid');
 
+// In-memory store: data is lost on restart (no database by design).
 let tasks = [];
 
 const getAll = () => [...tasks];
 
 const findById = (id) => tasks.find((t) => t.id === id);
 
+// Exact match only. (BUG-2: previously used String.includes, so 'to' matched 'todo'.)
 const getByStatus = (status) => tasks.filter((t) => t.status === status);
 
+// Pages are 1-based; the optional status filter is applied before slicing.
+// (BUG-1: offset was page * limit. BUG-5: status filter used to bypass pagination.)
 const getPaginated = (page, limit, status) => {
   const source = status ? getByStatus(status) : tasks;
   const offset = (page - 1) * limit;
@@ -44,6 +48,7 @@ const create = ({ title, description = '', status = 'todo', priority = 'medium',
   return task;
 };
 
+// Whitelist so clients cannot overwrite id/createdAt/completedAt. (BUG-4: mass assignment)
 const UPDATABLE_FIELDS = ['title', 'description', 'status', 'priority', 'dueDate'];
 
 const update = (id, fields) => {
@@ -57,6 +62,7 @@ const update = (id, fields) => {
   });
 
   const updated = { ...current, ...changes };
+  // Keep completedAt consistent with status. (BUG-7)
   if (changes.status === 'done' && !current.completedAt) {
     updated.completedAt = new Date().toISOString();
   } else if (changes.status && changes.status !== 'done') {
@@ -74,6 +80,8 @@ const remove = (id) => {
   return true;
 };
 
+// Only status/completedAt change. (BUG-3: priority used to be reset to 'medium'.)
+// Completing twice keeps the original completedAt.
 const completeTask = (id) => {
   const task = findById(id);
   if (!task) return null;
@@ -89,6 +97,7 @@ const completeTask = (id) => {
   return updated;
 };
 
+// Re-assigning an already assigned task simply replaces the assignee.
 const assignTask = (id, assignee) => {
   const index = tasks.findIndex((t) => t.id === id);
   if (index === -1) return null;

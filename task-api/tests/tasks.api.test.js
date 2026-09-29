@@ -2,6 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const taskService = require('../src/services/taskService');
 
+// Helper: POST a task, overriding defaults as needed.
 const create = (body = {}) =>
   request(app).post('/tasks').send({ title: 'task', ...body });
 

@@ -1,6 +1,7 @@
 const VALID_STATUSES = ['todo', 'in_progress', 'done'];
 const VALID_PRIORITIES = ['low', 'medium', 'high'];
 
+// Fields are checked with `!== undefined` (not truthiness) so '' is rejected. (BUG-6)
 const validateCreateTask = (body) => {
   if (!body.title || typeof body.title !== 'string' || body.title.trim() === '') {
     return 'title is required and must be a non-empty string';
@@ -33,6 +34,7 @@ const validateUpdateTask = (body) => {
   return null;
 };
 
+// Assignee must be a non-empty (after trim) string of at most 100 chars.
 const MAX_ASSIGNEE_LENGTH = 100;
 
 const validateAssignTask = (body) => {
@@ -46,6 +48,7 @@ const validateAssignTask = (body) => {
   return null;
 };
 
+// Query params arrive as strings, so match positive integers with a regex. (BUG-6)
 const validatePagination = ({ page, limit }) => {
   const isPositiveInt = (v) => /^[1-9]\d*$/.test(v);
   if (page !== undefined && !isPositiveInt(page)) return 'page must be a positive integer';

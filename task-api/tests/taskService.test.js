@@ -3,6 +3,7 @@ const taskService = require('../src/services/taskService');
 const seed = (n) =>
   Array.from({ length: n }, (_, i) => taskService.create({ title: `task ${i + 1}` }));
 
+// Service state is module-level, so reset it before each test for isolation.
 beforeEach(() => taskService._reset());
 
 describe('create', () => {
